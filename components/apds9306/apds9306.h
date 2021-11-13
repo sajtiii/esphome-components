@@ -75,6 +75,7 @@ namespace apds9306 {
             void setup() override;
             void update() override;
             float get_setup_priority() const override { return setup_priority::DATA; }
+            void set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res);
             void set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate);
             void set_gain(APDS9306_ALS_GAIN gain);
 
@@ -84,6 +85,7 @@ namespace apds9306 {
             APDS9306_ALS_GAIN gain;
             void power_on();
             void power_off();
+            void set_measurement_bits();
             int meas_rate_value();
             float meas_res_value();
             int gain_value();
