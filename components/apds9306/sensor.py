@@ -6,6 +6,7 @@ from esphome.const import (
     ICON_LIGHTBULB,
     DEVICE_CLASS_ILLUMINANCE,
     STATE_CLASS_MEASUREMENT,
+    CONF_RESOLUTION,
     CONF_RATE,
     CONF_GAIN,
 )
@@ -18,6 +19,16 @@ apds9306 = cg.esphome_ns.namespace("apds9306")
 APDS9306Component = apds9306.class_(
     "APDS9306Component", sensor.Sensor, cg.PollingComponent, i2c.I2CDevice
 )
+
+APDS9306AlsMeasRes = apds9306.enum("APDS9306_ALS_MEAS_RES")
+ALS_MEAS_RES_OPTIONS = {
+    "400MS": APDS9306AlsMeasRes.APDS9306_ALS_MEAS_RES_400MS,
+    "200MS": APDS9306AlsMeasRes.APDS9306_ALS_MEAS_RES_200MS,
+    "100MS": APDS9306AlsMeasRes.APDS9306_ALS_MEAS_RES_100MS,
+    "50MS": APDS9306AlsMeasRes.APDS9306_ALS_MEAS_RES_50MS,
+    "25MS": APDS9306AlsMeasRes.APDS9306_ALS_MEAS_RES_25MS,
+    "3MS": APDS9306AlsMeasRes.APDS9306_ALS_MEAS_RES_3MS,
+}
 
 APDS9306AlsMeasRate = apds9306.enum("APDS9306_ALS_MEAS_RATE")
 ALS_MEAS_RATE_OPTIONS = {
@@ -50,6 +61,9 @@ CONFIG_SCHEMA = (
     .extend(
         {
             cv.GenerateID(): cv.declare_id(APDS9306Component),
+            cv.Optional(CONF_RESOLUTION, default="100MS"): cv.enum(
+                ALS_MEAS_RATE_OPTIONS, upper=True
+            ),
             cv.Optional(CONF_RATE, default="100MS"): cv.enum(
                 ALS_MEAS_RATE_OPTIONS, upper=True
             ),
@@ -68,5 +82,6 @@ async def to_code(config):
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
     await sensor.register_sensor(var, config)
+    cg.add(var.set_measurement_resolution(config[CONF_RESOLUTION]))
     cg.add(var.set_measurement_rate(config[CONF_RATE]))
     cg.add(var.set_gain(config[CONF_GAIN]))

@@ -41,6 +41,15 @@ namespace apds9306 {
     #define APDS9306_PART_ID_APDS9306 0xB1
     #define APDS9306_PART_ID_APDS9306065 0xB3
 
+    enum APDS9306_ALS_MEAS_RES {
+        APDS9306_ALS_MEAS_RES_400MS = 0x00,
+        APDS9306_ALS_MEAS_RES_200MS = 0x10,
+        APDS9306_ALS_MEAS_RES_100MS = 0x20,
+        APDS9306_ALS_MEAS_RES_50MS = 0x30,
+        APDS9306_ALS_MEAS_RES_25MS = 0x40,
+        APDS9306_ALS_MEAS_RES_3MS = 0x50
+    };
+
     enum APDS9306_ALS_MEAS_RATE {
         APDS9306_ALS_MEAS_RATE_25MS = 0x00,
         APDS9306_ALS_MEAS_RATE_50MS = 0x01,
@@ -70,11 +79,13 @@ namespace apds9306 {
             void set_gain(APDS9306_ALS_GAIN gain);
 
         protected:
+            APDS9306_ALS_MEAS_RES meas_res;
             APDS9306_ALS_MEAS_RATE meas_rate;
             APDS9306_ALS_GAIN gain;
             void power_on();
             void power_off();
             int meas_rate_value();
+            float meas_res_value();
             int gain_value();
     };
 }  // namespace apds9306

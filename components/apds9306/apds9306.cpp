@@ -18,20 +18,41 @@ void APDS9306Component::power_off() {
     }
 }
 
+float APDS9306Component::meas_res_value() {
+    switch (this->meas_res) {
+        case APDS9306_ALS_MEAS_RES_400MS:
+            return 400;
+        case APDS9306_ALS_MEAS_RES_200MS:
+            return 200;
+        case APDS9306_ALS_MEAS_RES_100MS:
+            return 100;
+        case APDS9306_ALS_MEAS_RES_50MS:
+            return 50;
+        case APDS9306_ALS_MEAS_RES_25MS:
+            return 25;
+        case APDS9306_ALS_MEAS_RES_3MS:
+            return 3.125;
+        default:
+            return -1;
+    }
+}
+
 int APDS9306Component::meas_rate_value() {
     switch (this->meas_rate) {
-        case APDS9306_ALS_MEAS_RES_20BIT_400MS:
-            return 400;
-        case APDS9306_ALS_MEAS_RES_19BIT_200MS:
-            return 200;
-        case APDS9306_ALS_MEAS_RES_18BIT_100MS:
-            return 100;
-        case APDS9306_ALS_MEAS_RES_17BIT_50MS:
-            return 50;
-        case APDS9306_ALS_MEAS_RES_16BIT_25MS:
+        case APDS9306_ALS_MEAS_RATE_25MS:
             return 25;
-        case APDS9306_ALS_MEAS_RES_13BIT_3MS:
-            return 3;
+        case APDS9306_ALS_MEAS_RATE_50MS:
+            return 50;
+        case APDS9306_ALS_MEAS_RATE_100MS:
+            return 100;
+        case APDS9306_ALS_MEAS_RATE_200MS:
+            return 200;
+        case APDS9306_ALS_MEAS_RATE_500MS:
+            return 500;
+        case APDS9306_ALS_MEAS_RATE_1000MS:
+            return 1000;
+        case APDS9306_ALS_MEAS_RATE_2000MS:
+            return 2000;
         default:
             return -1;
     }
@@ -73,11 +94,18 @@ void APDS9306Component::setup() {
     this->power_off();
 }
 
-void APDS9306Component::set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate) {
-    this->meas_rate = meas_rate;
-    if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, meas_rate)) {
+void APDS9306Component::set_measurement_bits() {
+    if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, this->meas_res << 4 | this->meas_rate)) {
         this->mark_failed();
     }
+}
+
+void APDS9306Component::set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res) {
+    this->meas_res = meas_res;
+}
+
+void APDS9306Component::set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate) {
+    this->meas_rate = meas_rate;
 }
 
 void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
@@ -95,7 +123,7 @@ void APDS9306Component::update() {
     raw_data |= this->read_byte(APDS9306_CMD_ALS_DATA_2);
     this->power_off();
 
-    publish_state(((float)raw_data / this->gain_value()) * (100.0 / this->meas_rate_value()));
+    publish_state(((float)raw_data / this->gain_value()) * (100.0 / this->meas_res_value()));
 }
 
 
