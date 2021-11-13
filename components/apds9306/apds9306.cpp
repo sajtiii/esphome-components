@@ -78,8 +78,9 @@ int APDS9306Component::gain_value() {
 
 void APDS9306Component::setup() {
     ESP_LOGCONFIG(TAG, "Setting up APDS9306...");
-    uint8_t part_id = 0;
+    uint8_t part_id;
     if (!this->read_byte(APDS9306_CMD_PART_ID, &part_id)) {
+        ESP_LOGE("Unable to communicate");
         this->mark_failed();
         return;
     }
