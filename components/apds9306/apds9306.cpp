@@ -117,13 +117,20 @@ void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
 
 void APDS9306Component::update() {
     this->power_on();
-    while (!(this->read_byte(APDS9306_CMD_MAIN_STATUS) && APDS9306_MAIN_STATUS_ALS_DATA));
-    uint32_t raw_data = this->read_byte(APDS9306_CMD_ALS_DATA_2) << 16;
-    raw_data |= this->read_byte(APDS9306_CMD_ALS_DATA_2) << 8;
-    raw_data |= this->read_byte(APDS9306_CMD_ALS_DATA_2);
+    while (!this->data_ready());
+    uint32_t raw_data[3];
+    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[0]);
+    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[1]);
+    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[2]);
     this->power_off();
 
-    publish_state(((float)raw_data / this->gain_value()) * (100.0 / this->meas_res_value()));
+    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->meas_res_value()));
+}
+
+bool data_ready() {
+    uint8_t status;
+    this->read_byte(APDS9306_CMD_MAIN_STATUS, &status);
+    return status & APDS9306_MAIN_STATUS_ALS_DATA;
 }
 
 
