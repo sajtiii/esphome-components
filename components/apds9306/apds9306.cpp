@@ -29,7 +29,7 @@ void APDS9306Component::setup() {
     ESP_LOGCONFIG(TAG, "Setting up APDS9306...");
     uint8_t part_id;
     if (!this->read_byte(APDS9306_CMD_PART_ID, &part_id)) {
-        $this->error_code_ = COMMUNICATION_FAILED;
+        this->error_code_ = COMMUNICATION_FAILED;
         this->mark_failed();
         return;
     }
