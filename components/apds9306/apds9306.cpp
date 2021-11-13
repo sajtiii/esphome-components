@@ -13,15 +13,25 @@ void APDS9306Component::setup() {
     uint8_t part_id;
     if (!this->read_byte(APDS9306_CMD_PART_ID, &part_id)) {
         this->error_code_ = COMMUNICATION_FAILED;
-        //this->mark_failed();
-        //return;
+        this->mark_failed();
+        return;
     }
     this->part_id_ = part_id;
 
     if (this->part_id_ != APDS9306_PART_ID_APDS9306 && this->part_id_ != APDS9306_PART_ID_APDS9306065) {
         this->error_code_ = WRONG_CHIP_TYPE;
-        //this->mark_failed();
-        //return;
+        this->mark_failed();
+        return;
+    }
+
+    if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, this->conf_measurement_resolution_ << 4 | this->conf_measurement_rate_)) {
+        ESP_LOGE(TAG, "Failed to set measurement config bits!");
+        this->mark_failed();
+    }
+
+    if (!this->write_byte(APDS9306_CMD_ALS_GAIN, this->conf_gain_)) {
+        ESP_LOGE(TAG, "Failed to set gain bits!");
+        this->mark_failed();
     }
 
     this->disable();
@@ -42,8 +52,7 @@ void APDS9306Component::dump_config() {
             break;
     }
     if (this->error_code_ == 0) {
-        ESP_LOGCONFIG(TAG, "  Part ID: 0x%X", this->part_id_ >> 4);
-        ESP_LOGCONFIG(TAG, "  Revision ID: 0x%X", this->part_id_ << 4 >> 4);
+        ESP_LOGCONFIG(TAG, "  Part ID: 0x%X", this->part_id_);
         ESP_LOGCONFIG(TAG, "  Product: %s", this->part_id_ == APDS9306_PART_ID_APDS9306 ? "APDS-9306" : "APDS-9306-065");
     }
     ESP_LOGCONFIG(TAG, "  Measurement resolution: %fms", this->meas_res_value());
@@ -52,16 +61,48 @@ void APDS9306Component::dump_config() {
     LOG_UPDATE_INTERVAL(this);
 }
 
-void APDS9306Component::enable() {
-    if (this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_ENABLE)) {
-        this->mark_failed();
+void APDS9306Component::update() {
+    ESP_LOGV(TAG, "Measurement process started.");
+    if (!this->enable()) {
+        ESP_LOGW(TAG, "Failed to start sensor. Skipping update.");
+        this->status_set_warning();
+        return;
     }
+    while (!this->data_ready());
+    uint8_t raw_data[3];
+    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[0]);
+    this->read_byte(APDS9306_CMD_ALS_DATA_1, &raw_data[1]);
+    this->read_byte(APDS9306_CMD_ALS_DATA_0, &raw_data[2]);
+    this->disable();
+    ESP_LOGV(TAG, "Measurement process finished.");
+
+    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->meas_res_value()));
 }
 
-void APDS9306Component::disable() {
-    if (this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_DISABLE)) {
-        this->mark_failed();
-    }
+bool APDS9306Component::enable() {
+    return this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_ENABLE);
+}
+
+bool APDS9306Component::disable() {
+    return this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_DISABLE);
+}
+
+bool APDS9306Component::data_ready() {
+  uint8_t status;
+  this->read_byte(APDS9306_CMD_MAIN_STATUS, &status);
+  return status & APDS9306_MAIN_STATUS_ALS_DATA;
+}
+
+void APDS9306Component::set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res) {
+  this->conf_measurement_resolution_ = meas_res;
+}
+
+void APDS9306Component::set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate) {
+  this->conf_measurement_rate_ = meas_rate;
+}
+
+void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
+  this->conf_gain_ = gain;
 }
 
 float APDS9306Component::meas_res_value() {
@@ -120,50 +161,6 @@ int APDS9306Component::gain_value() {
             return 0;
     }
 }
-
-
-void APDS9306Component::set_measurement_bits() {
-    if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, this->conf_measurement_resolution_ << 4 | this->conf_measurement_rate_)) {
-        this->mark_failed();
-    }
-}
-
-void APDS9306Component::set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res) {
-    this->conf_measurement_resolution_ = meas_res;
-    this->set_measurement_bits();
-}
-
-void APDS9306Component::set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate) {
-    this->conf_measurement_rate_ = meas_rate;
-    this->set_measurement_bits();
-}
-
-void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
-    this->conf_gain_ = gain;
-    if (!this->write_byte(APDS9306_CMD_ALS_GAIN, gain)) {
-        this->mark_failed();
-    }
-}
-
-void APDS9306Component::update() {
-    ESP_LOGD(TAG, "Update process started");
-    this->enable();
-    while (!this->data_ready());
-    uint8_t raw_data[3];
-    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[0]);
-    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[1]);
-    this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[2]);
-    this->disable();
-
-    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->meas_res_value()));
-}
-
-bool APDS9306Component::data_ready() {
-    uint8_t status;
-    this->read_byte(APDS9306_CMD_MAIN_STATUS, &status);
-    return status & APDS9306_MAIN_STATUS_ALS_DATA;
-}
-
 
 }  // namespace apds9306
 }  // namespace esphome

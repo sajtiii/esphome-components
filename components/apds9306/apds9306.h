@@ -81,9 +81,8 @@ namespace apds9306 {
             void set_gain(APDS9306_ALS_GAIN gain);
 
         protected:
-            void enable();
-            void disable();
-            void set_measurement_bits();
+            bool enable();
+            bool disable();
             int meas_rate_value();
             float meas_res_value();
             int gain_value();

@@ -54,7 +54,7 @@ ALS_GAIN_OPTIONS = {
 CONFIG_SCHEMA = (
     sensor.sensor_schema(
         icon=ICON_LIGHTBULB,
-        accuracy_decimals=0,
+        accuracy_decimals=1,
         device_class=DEVICE_CLASS_ILLUMINANCE,
         state_class=STATE_CLASS_MEASUREMENT,
     )
@@ -67,7 +67,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_RATE, default="100MS"): cv.enum(
                 ALS_MEAS_RATE_OPTIONS, upper=True
             ),
-            cv.Optional(CONF_GAIN, default="1X"): cv.enum(
+            cv.Optional(CONF_GAIN, default="3X"): cv.enum(
                 ALS_GAIN_OPTIONS, upper=True
             ),
         }
