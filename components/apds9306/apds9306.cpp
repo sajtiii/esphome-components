@@ -63,12 +63,12 @@
    // });
  }
  
- bool APDS9306Component::write_command_(uint8_t command) {
+ //bool APDS9306Component::write_command_(uint8_t command) {
    // Warning ugly, trick the I2Ccomponent base by setting register to the first 8 bit.
    //return this->write_byte(command >> 8, command & 0xFF);
- }
+ //}
  
- bool APDS9306Component::read_data_(uint16_t *data, uint8_t len) {
+ //bool APDS9306Component::read_data_(uint16_t *data, uint8_t len) {
    /*const uint8_t num_bytes = len * 3;
    std::vector<uint8_t> buf(num_bytes);
  
@@ -87,7 +87,7 @@
    }
  
    return true;*/
- }
+ //}
  
  }  // namespace sht3xd
  }  // namespace esphome
