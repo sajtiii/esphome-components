@@ -22,6 +22,12 @@ void APDS9306Component::dump_config() {
         default:
             break;
     }
+    if (this->error_code_ == 0) {
+        ESP_LOGCONFIG(TAG, "  Part ID: %s", this->part_id_ == APDS9306_PART_ID_APDS9306065 ? "-065" : "");
+    }
+    ESP_LOGCONFIG(TAG, "  Measurement resolution: %fms", this->meas_res_value());
+    ESP_LOGCONFIG(TAG, "  Measurement rate: %ims", this->meas_rate_value());
+    ESP_LOGCONFIG(TAG, "  Gain: %ix", this->gain_value());
     LOG_UPDATE_INTERVAL(this);
 }
 
@@ -33,6 +39,7 @@ void APDS9306Component::setup() {
         this->mark_failed();
         return;
     }
+    this->part_id_ = part_id;
 
     if (part_id != APDS9306_PART_ID_APDS9306 && part_id != APDS9306_PART_ID_APDS9306065) {
         this->error_code_ = WRONG_CHIP_TYPE;
@@ -40,7 +47,6 @@ void APDS9306Component::setup() {
         return;
     }
 
-    ESP_LOGD(TAG, "    Part ID: APDS-9306%s", part_id == APDS9306_PART_ID_APDS9306065 ? "-065" : "");
     this->disable();
 }
 
@@ -57,7 +63,7 @@ void APDS9306Component::disable() {
 }
 
 float APDS9306Component::meas_res_value() {
-    switch (this->meas_res) {
+    switch (this->conf_measurement_resolution_) {
         case APDS9306_ALS_MEAS_RES_400MS:
             return 400;
         case APDS9306_ALS_MEAS_RES_200MS:
@@ -76,7 +82,7 @@ float APDS9306Component::meas_res_value() {
 }
 
 int APDS9306Component::meas_rate_value() {
-    switch (this->meas_rate) {
+    switch (this->conf_measurement_rate_) {
         case APDS9306_ALS_MEAS_RATE_25MS:
             return 25;
         case APDS9306_ALS_MEAS_RATE_50MS:
@@ -97,7 +103,7 @@ int APDS9306Component::meas_rate_value() {
 }
 
 int APDS9306Component::gain_value() {
-    switch (this->gain) {
+    switch (this->conf_gain_) {
         case APDS9306_ALS_GAIN_1:
             return 1;
         case APDS9306_ALS_GAIN_3:
@@ -115,23 +121,23 @@ int APDS9306Component::gain_value() {
 
 
 void APDS9306Component::set_measurement_bits() {
-    if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, this->meas_res << 4 | this->meas_rate)) {
+    if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, this->conf_measurement_resolution_ << 4 | this->conf_measurement_rate_)) {
         this->mark_failed();
     }
 }
 
 void APDS9306Component::set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res) {
-    this->meas_res = meas_res;
+    this->conf_measurement_resolution_ = meas_res;
     this->set_measurement_bits();
 }
 
 void APDS9306Component::set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate) {
-    this->meas_rate = meas_rate;
+    this->conf_measurement_rate_ = meas_rate;
     this->set_measurement_bits();
 }
 
 void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
-    this->gain = gain;
+    this->conf_gain_ = gain;
     if (!this->write_byte(APDS9306_CMD_ALS_GAIN, gain)) {
         this->mark_failed();
     }
@@ -146,7 +152,7 @@ void APDS9306Component::update() {
     this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[2]);
     this->disable();
 
-    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->meas_res_value()));
+    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->conf_gain__value()) * (100.0 / this->conf_measurement_resolution__value()));
 }
 
 bool APDS9306Component::data_ready() {

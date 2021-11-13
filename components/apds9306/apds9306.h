@@ -81,9 +81,6 @@ namespace apds9306 {
             void set_gain(APDS9306_ALS_GAIN gain);
 
         protected:
-            APDS9306_ALS_MEAS_RES meas_res;
-            APDS9306_ALS_MEAS_RATE meas_rate;
-            APDS9306_ALS_GAIN gain;
             void enable();
             void disable();
             void set_measurement_bits();
@@ -92,11 +89,15 @@ namespace apds9306 {
             int gain_value();
             bool data_ready();
 
+            APDS9306_ALS_MEAS_RES conf_measurement_resolution_;
+            APDS9306_ALS_MEAS_RATE conf_measurement_rate_;
+            APDS9306_ALS_GAIN conf_gain_;
             enum ErrorCode {
                 NONE = 0,
                 COMMUNICATION_FAILED,
                 WRONG_CHIP_TYPE,
             } error_code_{NONE};
+            uint8_t part_id_;
     };
 }  // namespace apds9306
 }  // namespace esphome
