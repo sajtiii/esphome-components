@@ -20,8 +20,8 @@ void APDS9306Component::setup() {
 
     if (this->part_id_ != APDS9306_PART_ID_APDS9306 && this->part_id_ != APDS9306_PART_ID_APDS9306065) {
         this->error_code_ = WRONG_CHIP_TYPE;
-        this->mark_failed();
-        return;
+        //this->mark_failed();
+        //return;
     }
 
     this->disable();
