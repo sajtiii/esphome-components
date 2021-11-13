@@ -13,8 +13,8 @@ void APDS9306Component::setup() {
     uint8_t part_id;
     if (!this->read_byte(APDS9306_CMD_PART_ID, &part_id)) {
         this->error_code_ = COMMUNICATION_FAILED;
-        this->mark_failed();
-        return;
+        //this->mark_failed();
+        //return;
     }
     this->part_id_ = part_id;
 
