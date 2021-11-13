@@ -152,7 +152,7 @@ void APDS9306Component::update() {
     this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[2]);
     this->disable();
 
-    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->conf_measurement_resolution__value()));
+    publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->meas_res_value()));
 }
 
 bool APDS9306Component::data_ready() {
