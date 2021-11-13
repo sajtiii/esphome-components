@@ -32,7 +32,7 @@
    LOG_SENSOR("  ", "Temperature", this->temperature_sensor_);
    LOG_SENSOR("  ", "Humidity", this->humidity_sensor_);*/
  }
- float APDS9306Component::get_setup_priority() const { return setup_priority::DATA; }
+ 
  void APDS9306Component::update() {
     publish_state(45);
    // if (this->status_has_warning()) {
