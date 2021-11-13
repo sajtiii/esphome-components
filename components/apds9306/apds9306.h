@@ -83,12 +83,13 @@ namespace apds9306 {
             APDS9306_ALS_MEAS_RES meas_res;
             APDS9306_ALS_MEAS_RATE meas_rate;
             APDS9306_ALS_GAIN gain;
-            void power_on();
-            void power_off();
+            void enable();
+            void disable();
             void set_measurement_bits();
             int meas_rate_value();
             float meas_res_value();
             int gain_value();
+            bool data_ready();
     };
 }  // namespace apds9306
 }  // namespace esphome

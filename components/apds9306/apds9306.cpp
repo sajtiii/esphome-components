@@ -6,13 +6,13 @@ namespace apds9306 {
 
 static const char *const TAG = "apds9306";
 
-void APDS9306Component::power_on() {
+void APDS9306Component::enable() {
     if (this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_ENABLE)) {
         this->mark_failed();
     }
 }
 
-void APDS9306Component::power_off() {
+void APDS9306Component::disable() {
     if (this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_DISABLE)) {
         this->mark_failed();
     }
@@ -91,7 +91,7 @@ void APDS9306Component::setup() {
     }
 
     ESP_LOGD(TAG, "    Part ID: APDS-9306%s", part_id == APDS9306_PART_ID_APDS9306065 ? "-065" : "");
-    this->power_off();
+    this->disable();
 }
 
 void APDS9306Component::set_measurement_bits() {
@@ -102,10 +102,12 @@ void APDS9306Component::set_measurement_bits() {
 
 void APDS9306Component::set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res) {
     this->meas_res = meas_res;
+    this->set_measurement_bits();
 }
 
 void APDS9306Component::set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate) {
     this->meas_rate = meas_rate;
+    this->set_measurement_bits();
 }
 
 void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
@@ -116,18 +118,18 @@ void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
 }
 
 void APDS9306Component::update() {
-    this->power_on();
+    this->enable();
     while (!this->data_ready());
-    uint32_t raw_data[3];
+    uint8_t raw_data[3];
     this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[0]);
     this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[1]);
     this->read_byte(APDS9306_CMD_ALS_DATA_2, &raw_data[2]);
-    this->power_off();
+    this->disable();
 
     publish_state(((float)(raw_data[0] << 16 | raw_data[1] << 8 | raw_data[2]) / this->gain_value()) * (100.0 / this->meas_res_value()));
 }
 
-bool data_ready() {
+bool APDS9306Component::data_ready() {
     uint8_t status;
     this->read_byte(APDS9306_CMD_MAIN_STATUS, &status);
     return status & APDS9306_MAIN_STATUS_ALS_DATA;
