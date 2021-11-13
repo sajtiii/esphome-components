@@ -23,7 +23,8 @@ void APDS9306Component::dump_config() {
             break;
     }
     if (this->error_code_ == 0) {
-        ESP_LOGCONFIG(TAG, "  Part ID: %s", this->part_id_ == APDS9306_PART_ID_APDS9306065 ? "-065" : "");
+        ESP_LOGCONFIG(TAG, "  Part ID: 0x%X", this->part_id_);
+        ESP_LOGCONFIG(TAG, "  Product: %s", this->part_id_ == APDS9306_PART_ID_APDS9306 ? "APDS-9306" : "APDS-9306-065");
     }
     ESP_LOGCONFIG(TAG, "  Measurement resolution: %fms", this->meas_res_value());
     ESP_LOGCONFIG(TAG, "  Measurement rate: %ims", this->meas_rate_value());
