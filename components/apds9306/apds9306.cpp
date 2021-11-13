@@ -146,6 +146,7 @@ void APDS9306Component::set_gain(APDS9306_ALS_GAIN gain) {
 }
 
 void APDS9306Component::update() {
+    ESP_LOGD(TAG, "Update process started");
     this->enable();
     while (!this->data_ready());
     uint8_t raw_data[3];
