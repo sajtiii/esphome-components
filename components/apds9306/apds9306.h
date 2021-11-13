@@ -74,7 +74,8 @@ namespace apds9306 {
         public:
             void setup() override;
             void update() override;
-            float get_setup_priority() const override { return setup_priority::DATA; }
+            void dump_config() override;
+            float get_setup_priority() const override;
             void set_measurement_resolution(APDS9306_ALS_MEAS_RES meas_res);
             void set_measurement_rate(APDS9306_ALS_MEAS_RATE meas_rate);
             void set_gain(APDS9306_ALS_GAIN gain);
@@ -90,6 +91,12 @@ namespace apds9306 {
             float meas_res_value();
             int gain_value();
             bool data_ready();
+
+            enum ErrorCode {
+                NONE = 0,
+                COMMUNICATION_FAILED,
+                WRONG_CHIP_TYPE,
+            } error_code_{NONE};
     };
 }  // namespace apds9306
 }  // namespace esphome

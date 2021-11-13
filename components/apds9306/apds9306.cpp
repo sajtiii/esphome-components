@@ -6,6 +6,44 @@ namespace apds9306 {
 
 static const char *const TAG = "apds9306";
 
+float BME280Component::get_setup_priority() const { return setup_priority::DATA; }
+
+void BME280Component::dump_config() {
+    ESP_LOGCONFIG(TAG, "APDS9306:");
+    LOG_I2C_DEVICE(this);
+    switch (this->error_code_) {
+        case COMMUNICATION_FAILED:
+            ESP_LOGE(TAG, "Communication with APDS9306 failed!");
+            break;
+        case WRONG_CHIP_TYPE:
+            ESP_LOGE(TAG, "Wrong chip type. Is it an APDS9306?");
+            break;
+        case NONE:
+        default:
+            break;
+    }
+    LOG_UPDATE_INTERVAL(this);
+}
+
+void APDS9306Component::setup() {
+    ESP_LOGCONFIG(TAG, "Setting up APDS9306...");
+    uint8_t part_id;
+    if (!this->read_byte(APDS9306_CMD_PART_ID, &part_id)) {
+        $this->error_code_ = COMMUNICATION_FAILED;
+        this->mark_failed();
+        return;
+    }
+
+    if (part_id != APDS9306_PART_ID_APDS9306 && part_id != APDS9306_PART_ID_APDS9306065) {
+        this->error_code_ = WRONG_CHIP_TYPE;
+        this->mark_failed();
+        return;
+    }
+
+    ESP_LOGD(TAG, "    Part ID: APDS-9306%s", part_id == APDS9306_PART_ID_APDS9306065 ? "-065" : "");
+    this->disable();
+}
+
 void APDS9306Component::enable() {
     if (this->write_byte(APDS9306_CMD_MAIN_CTRL, APDS9306_MAIN_CTRL_ENABLE)) {
         this->mark_failed();
@@ -75,25 +113,6 @@ int APDS9306Component::gain_value() {
     }
 }
 
-
-void APDS9306Component::setup() {
-    ESP_LOGCONFIG(TAG, "Setting up APDS9306...");
-    uint8_t part_id;
-    if (!this->read_byte(APDS9306_CMD_PART_ID, &part_id)) {
-        ESP_LOGE(TAG, "Unable to communicate");
-        this->mark_failed();
-        return;
-    }
-
-    if (part_id != APDS9306_PART_ID_APDS9306 && part_id != APDS9306_PART_ID_APDS9306065) {
-        ESP_LOGE(TAG, "Wrong chip type...");
-        this->mark_failed();
-        return;
-    }
-
-    ESP_LOGD(TAG, "    Part ID: APDS-9306%s", part_id == APDS9306_PART_ID_APDS9306065 ? "-065" : "");
-    this->disable();
-}
 
 void APDS9306Component::set_measurement_bits() {
     if (!this->write_byte(APDS9306_CMD_ALS_MEAS_RATE, this->meas_res << 4 | this->meas_rate)) {
