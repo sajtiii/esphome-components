@@ -6,9 +6,9 @@ namespace apds9306 {
 
 static const char *const TAG = "apds9306";
 
-float BME280Component::get_setup_priority() const { return setup_priority::DATA; }
+float APDS9306Component::get_setup_priority() const { return setup_priority::DATA; }
 
-void BME280Component::dump_config() {
+void APDS9306Component::dump_config() {
     ESP_LOGCONFIG(TAG, "APDS9306:");
     LOG_I2C_DEVICE(this);
     switch (this->error_code_) {
