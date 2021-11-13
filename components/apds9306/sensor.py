@@ -62,7 +62,7 @@ CONFIG_SCHEMA = (
         {
             cv.GenerateID(): cv.declare_id(APDS9306Component),
             cv.Optional(CONF_RESOLUTION, default="100MS"): cv.enum(
-                ALS_MEAS_RATE_OPTIONS, upper=True
+                ALS_MEAS_RES_OPTIONS, upper=True
             ),
             cv.Optional(CONF_RATE, default="100MS"): cv.enum(
                 ALS_MEAS_RATE_OPTIONS, upper=True
